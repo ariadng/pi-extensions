@@ -1,0 +1,24 @@
+{
+  "name": "pi-todo",
+  "version": "0.1.0",
+  "description": "Claude-Code-style TodoWrite tracking for Pi sessions",
+  "type": "module",
+  "keywords": ["pi-package", "pi", "todo", "todowrite"],
+  "license": "MIT",
+  "pi": {
+    "extensions": ["./src/index.ts"]
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  }
+}
