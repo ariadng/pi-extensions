@@ -1,0 +1,64 @@
+{
+  "name": "pi-webfetch",
+  "version": "0.1.0",
+  "description": "Claude-Code-compatible WebFetch tool for Pi with SSRF-safe bounded fetching",
+  "type": "module",
+  "homepage": "https://github.com/ariadng/pi-extensions/tree/main/web-fetch#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ariadng/pi-extensions.git",
+    "directory": "web-fetch"
+  },
+  "bugs": {
+    "url": "https://github.com/ariadng/pi-extensions/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "web-fetch",
+    "webfetch",
+    "claude-code"
+  ],
+  "license": "MIT",
+  "files": [
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "LICENSE",
+    "tsconfig.json"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "smoke": "node --import tsx -e \"import ext from './src/index.ts'; const tools=[]; const commands=[]; const flags=[]; ext({registerFlag:n=>flags.push(n),registerTool:t=>tools.push(t.name),registerCommand:n=>commands.push(n),on(){},getFlag(){return false}}); if (!tools.includes('WebFetch') || !commands.includes('webfetch')) throw new Error('WebFetch smoke registration failed'); console.log({tools,commands,flags});\""
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@types/mime-types": "^3.0.1",
+    "@types/node": "^22.0.0",
+    "@types/turndown": "^5.0.6",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.0"
+  },
+  "dependencies": {
+    "dom-serializer": "^3.1.1",
+    "htmlparser2": "^12.0.0",
+    "mime-types": "^3.0.2",
+    "turndown": "^7.2.4"
+  }
+}

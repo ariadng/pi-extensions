@@ -12,6 +12,7 @@ This repository contains local Pi extension packages that add Claude-Code-style 
 | [`pi-todo`](todo/) | Adds Claude-compatible `TodoWrite` tracking, optional task mode, reminders, and a todo widget. |
 | [`pi-plan`](plan/) | Adds read-only plan mode with `EnterPlanMode` and `ExitPlanMode`; bundles `pi-ask` and `pi-todo`. |
 | [`pi-mcp`](mcp/) | Adds lazy Model Context Protocol client support for configured MCP servers. |
+| [`pi-webfetch`](web-fetch/) | Adds a Claude-compatible `WebFetch` tool with SSRF-safe bounded URL fetching. |
 
 ## Quick start
 
@@ -27,11 +28,18 @@ Install MCP support separately if you want MCP tools/resources/prompts:
 pi install /Users/optizon/Personal/pi-extensions/mcp
 ```
 
+Install WebFetch for public URL fetching:
+
+```bash
+pi install /Users/optizon/Personal/pi-extensions/web-fetch
+```
+
 For one-off development runs, use `pi -e` with a package directory:
 
 ```bash
 pi -e /Users/optizon/Personal/pi-extensions/plan
 pi -e /Users/optizon/Personal/pi-extensions/mcp
+pi -e /Users/optizon/Personal/pi-extensions/web-fetch
 ```
 
 ## Development
@@ -52,3 +60,4 @@ Some packages may not define every script; see each package README for package-s
 - [`todo/README.md`](todo/README.md)
 - [`plan/README.md`](plan/README.md)
 - [`mcp/README.md`](mcp/README.md)
+- [`web-fetch/README.md`](web-fetch/README.md)
