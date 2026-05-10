@@ -63,6 +63,7 @@ Pi will read `package.json` and load `src/index.ts` from the `pi.extensions` man
 - `chrome_close` — close the managed browser, disconnect from an existing endpoint, or close a tab.
 - `chrome_tabs` — list, create, select/activate, or close page targets.
 - `chrome_navigate` — navigate the current/specified tab and wait for load states.
+- `chrome_search` — search Google or DuckDuckGo and return compact organic results.
 - `chrome_wait_for` — wait for time, text, selector, URL substring, or load state.
 - `chrome_snapshot` — inspect semantic page elements with refs.
 - `chrome_click` — click by ref, selector, or viewport coordinates.
@@ -141,8 +142,9 @@ Or use tools directly:
 
 1. `chrome_launch` with `{ "url": "https://example.com" }`
 2. `chrome_snapshot` with `{}`
-3. `chrome_click` with `{ "ref": "c1" }` using a ref from the latest snapshot
-4. `chrome_navigate` with `{ "url": "https://example.org", "waitUntil": "load" }`
+3. `chrome_search` with `{ "query": "pi coding agent github", "engine": "auto" }`
+4. `chrome_click` with `{ "ref": "c1" }` using a ref from the latest snapshot
+5. `chrome_navigate` with `{ "url": "https://example.org", "waitUntil": "load" }`
 
 ## Troubleshooting
 
@@ -235,6 +237,26 @@ Headless is the default. Use one of:
 - `PI_WEB_CHROME_HEADLESS=0`
 - `/chrome login [url]`
 - `/chrome start [url] --visible`
+
+### Search with Google and DuckDuckGo
+
+Use `chrome_search` for efficient web search. It navigates Chrome to lightweight search-result pages, extracts organic result titles/URLs/snippets, and detects bot challenges:
+
+```json
+{ "query": "pi coding agent github", "engine": "auto", "limit": 10 }
+```
+
+Engines:
+
+- `auto` — try DuckDuckGo first, then Google if needed.
+- `duckduckgo` — defaults to `html` mode for lightweight pages; `duckDuckGoMode` can be `html`, `lite`, or `web`.
+- `google` — uses `udm=14`, `pws=0`, and `num=<limit>` for compact web results.
+
+If Google or DuckDuckGo shows a bot challenge, `chrome_search` reports it instead of pretending no results exist. Use a visible named profile, complete the challenge manually if appropriate, then retry:
+
+```text
+/chrome start --visible
+```
 
 ### Stale refs
 

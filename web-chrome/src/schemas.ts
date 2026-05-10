@@ -79,6 +79,20 @@ export const ChromeNavigateParamsSchema = Type.Object(
 	{ additionalProperties: false },
 );
 
+export const ChromeSearchParamsSchema = Type.Object(
+	{
+		query: Type.String({ minLength: 1, description: "Search query." }),
+		engine: Type.Optional(StringEnum(["auto", "google", "duckduckgo"] as const, { description: "Search engine. Default: auto (DuckDuckGo then Google)." })),
+		limit: Type.Optional(Type.Number({ minimum: 1, maximum: 20, description: "Maximum results to return. Default: 10." })),
+		language: Type.Optional(Type.String({ description: "Language hint for search, e.g. en. Default: en." })),
+		region: Type.Optional(Type.String({ description: "Region hint, used by DuckDuckGo as kl when provided." })),
+		duckDuckGoMode: Type.Optional(StringEnum(["html", "lite", "web"] as const, { description: "DuckDuckGo variant. Default: html for lightweight results." })),
+		tabId: Type.Optional(Type.String({ description: "Target/tab id. Defaults to current tab." })),
+		timeoutMs: Type.Optional(Type.Number({ minimum: 1000, description: "Search navigation/extraction timeout in milliseconds. Default: 30000." })),
+	},
+	{ additionalProperties: false },
+);
+
 export const ChromeWaitForParamsSchema = Type.Object(
 	{
 		tabId: Type.Optional(Type.String({ description: "Target/tab id. Defaults to current tab." })),
@@ -212,6 +226,7 @@ export type ChromeConnectParams = Static<typeof ChromeConnectParamsSchema>;
 export type ChromeCloseParams = Static<typeof ChromeCloseParamsSchema>;
 export type ChromeTabsParams = Static<typeof ChromeTabsParamsSchema>;
 export type ChromeNavigateParams = Static<typeof ChromeNavigateParamsSchema>;
+export type ChromeSearchParams = Static<typeof ChromeSearchParamsSchema>;
 export type ChromeWaitForParams = Static<typeof ChromeWaitForParamsSchema>;
 export type ChromeSnapshotParams = Static<typeof ChromeSnapshotParamsSchema>;
 export type ChromeClickParams = Static<typeof ChromeClickParamsSchema>;

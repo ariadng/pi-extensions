@@ -18,6 +18,7 @@ import {
 	type SnapshotResult,
 	type TypeInput as PageTypeInput,
 } from "./page-session.js";
+import { buildSearchUrl, formatSearchResults, searchEnginesFor, type DuckDuckGoMode, type SearchEngine, type SearchResult } from "./search.js";
 import type { SnapshotOptions } from "./snapshot.js";
 import type { BrowserVersion, StatusDetails, TabSummary, TargetInfo } from "./types.js";
 import { envBoolean } from "../config.js";
@@ -46,6 +47,17 @@ export interface NavigateInput {
 	url: string;
 	tabId?: string;
 	waitUntil?: "none" | LoadState;
+	timeoutMs?: number;
+}
+
+export interface SearchInput {
+	query: string;
+	engine?: SearchEngine;
+	limit?: number;
+	language?: string;
+	region?: string;
+	duckDuckGoMode?: DuckDuckGoMode;
+	tabId?: string;
 	timeoutMs?: number;
 }
 
@@ -311,6 +323,51 @@ export class BrowserManager {
 			await this.refreshTargets(signal).catch(() => undefined);
 			const tab = this.tabSummaries(false).find((item) => item.targetId === session.targetId) ?? tabFromTarget(this.targetInfos.get(session.targetId), session.targetId, true);
 			return { tab, navigation, message: `Navigated to ${input.url}${waitUntil === "none" ? "" : ` and waited for ${waitUntil}`}.` };
+		}, signal);
+	}
+
+	async search(input: SearchInput, signal?: AbortSignal): Promise<SearchResult & { tab: TabSummary; formatted: string; message: string }> {
+		this.assertConnected();
+		if (!input.query?.trim()) throw new Error("chrome_search requires a non-empty query.");
+		const timeoutMs = input.timeoutMs ?? 30_000;
+		const limit = Math.max(1, Math.min(input.limit ?? 10, 20));
+		const engines = searchEnginesFor(input.engine);
+		const session = await this.ensurePageSession(input.tabId, signal);
+
+		return session.queue.run(async () => {
+			await this.activateTab(session.targetId, signal);
+			const attempts: SearchResult["attempts"] = [];
+			let lastResult: SearchResult | undefined;
+
+			for (const engine of engines) {
+				const url = buildSearchUrl(engine, { ...input, limit });
+				try {
+					const sinceSeq = session.eventSequence;
+					const navigation = await session.send<{ frameId?: string; loaderId?: string; errorText?: string }>("Page.navigate", { url }, { timeoutMs, signal });
+					if (navigation.errorText) throw new Error(navigation.errorText);
+					await session.waitForLoadState("load", timeoutMs, signal, sinceSeq, navigation.loaderId).catch(() => undefined);
+					await sleep(500, signal).catch(() => undefined);
+					const extracted = await session.extractSearchResults({ engine, limit }, signal);
+					const result: SearchResult = { query: input.query, attempts, ...extracted, results: extracted.results.slice(0, limit) };
+					attempts.push({ engine, url, challenge: extracted.challenge, challengeReason: extracted.challengeReason, resultCount: extracted.results.length });
+					lastResult = result;
+					if (!extracted.challenge && extracted.results.length > 0) {
+						await this.refreshTargets(signal).catch(() => undefined);
+						const finalResult = { ...result, attempts: [...attempts] };
+						return { ...finalResult, tab: this.tabForSession(session), formatted: formatSearchResults(finalResult), message: `Found ${finalResult.results.length} result(s) with ${engine}.` };
+					}
+				} catch (error) {
+					const message = error instanceof Error ? error.message : String(error);
+					attempts.push({ engine, url, challenge: false, resultCount: 0, error: message });
+				}
+			}
+
+			if (!lastResult) {
+				const fallback: SearchResult = { query: input.query, engine: engines[engines.length - 1] ?? "duckduckgo", url: attempts.at(-1)?.url ?? "", title: "", challenge: false, attempts: [...attempts], results: [] };
+				return { ...fallback, tab: this.tabForSession(session), formatted: formatSearchResults(fallback), message: "Search failed for all engines." };
+			}
+			const finalResult = { ...lastResult, attempts: [...attempts] };
+			return { ...finalResult, tab: this.tabForSession(session), formatted: formatSearchResults(finalResult), message: finalResult.challenge ? "Search engine challenge detected." : "No search results extracted." };
 		}, signal);
 	}
 

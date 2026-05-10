@@ -1,5 +1,6 @@
 import type { CdpConnection, CdpEvent } from "./connection.js";
 import { applySnapshotRefs, formatSnapshot, SNAPSHOT_EXTRACTOR, type ElementBox, type SnapshotData, type SnapshotNode, type SnapshotOptions, type SnapshotRef } from "./snapshot.js";
+import { SEARCH_EXTRACTOR, type SearchEngine, type SearchExtractionResult } from "./search.js";
 import type { TargetInfo } from "./types.js";
 import { AsyncQueue, abortError } from "../util/async-queue.js";
 import { writeArtifact } from "../util/artifacts.js";
@@ -335,6 +336,10 @@ export class PageSession {
 		} finally {
 			await this.send("Runtime.releaseObjectGroup", { objectGroup }, { signal, timeoutMs: 2_000 }).catch(() => undefined);
 		}
+	}
+
+	async extractSearchResults(options: { engine: Exclude<SearchEngine, "auto">; limit?: number }, signal?: AbortSignal): Promise<SearchExtractionResult> {
+		return this.evaluate<SearchExtractionResult>(`(${SEARCH_EXTRACTOR})(${JSON.stringify(options)})`, { timeoutMs: 10_000, signal });
 	}
 
 	async snapshot(options: SnapshotOptions, signal?: AbortSignal): Promise<SnapshotResult> {

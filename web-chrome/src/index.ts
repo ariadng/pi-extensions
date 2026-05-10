@@ -18,6 +18,7 @@ import {
 	ChromePressKeyParamsSchema,
 	ChromeScreenshotParamsSchema,
 	ChromeScrollParamsSchema,
+	ChromeSearchParamsSchema,
 	ChromeSnapshotParamsSchema,
 	ChromeTabsParamsSchema,
 	ChromeTypeParamsSchema,
@@ -34,6 +35,7 @@ import {
 	type ChromePressKeyParams,
 	type ChromeScreenshotParams,
 	type ChromeScrollParams,
+	type ChromeSearchParams,
 	type ChromeSnapshotParams,
 	type ChromeTabsParams,
 	type ChromeTypeParams,
@@ -45,6 +47,7 @@ const CHROME_SUBCOMMANDS = ["status", "start", "stop", "tabs", "login", "risk", 
 const PROMPT_GUIDELINES = [
 	"Use chrome_launch before browser actions unless chrome_status shows Chrome is already connected.",
 	"Use chrome_tabs action=list when you need the current tab id or available tabs.",
+	"Use chrome_search for web search; it uses lightweight search-result pages and reports search-engine challenges clearly.",
 	"Use chrome_navigate for page navigation and prefer waitUntil=load unless the user asks otherwise.",
 	"Use chrome_wait_for after browser actions that trigger asynchronous changes before deciding the next action.",
 	"Use chrome_snapshot before chrome_click or chrome_type unless the user gave an exact selector or coordinates.",
@@ -64,6 +67,7 @@ export default function webChromeExtension(pi: ExtensionAPI): void {
 	pi.registerTool(createCloseTool(manager));
 	pi.registerTool(createTabsTool(manager));
 	pi.registerTool(createNavigateTool(manager));
+	pi.registerTool(createSearchTool(manager));
 	pi.registerTool(createWaitForTool(manager));
 	pi.registerTool(createSnapshotTool(manager));
 	pi.registerTool(createClickTool(manager));
@@ -191,6 +195,30 @@ function createNavigateTool(manager: BrowserManager) {
 			const details = await manager.navigate(params as ChromeNavigateParams, signal);
 			setChromeStatus(ctx, manager);
 			return textResult(`${details.message}\n\nCurrent tab:\n${formatTabs([details.tab])}`, details);
+		},
+	});
+}
+
+function createSearchTool(manager: BrowserManager) {
+	return defineTool<typeof ChromeSearchParamsSchema, Awaited<ReturnType<BrowserManager["search"]>>>({
+		name: "chrome_search",
+		label: "Chrome Search",
+		description: "Search the web in Chrome using Google or DuckDuckGo, parse organic results, and detect search-engine bot challenges.",
+		promptSnippet: "Search Google or DuckDuckGo and return compact organic results",
+		promptGuidelines: PROMPT_GUIDELINES,
+		parameters: ChromeSearchParamsSchema,
+		executionMode: "sequential",
+		async execute(_toolCallId, params, signal, _onUpdate, ctx) {
+			const details = await manager.search(params as ChromeSearchParams, signal);
+			setChromeStatus(ctx, manager);
+			return textResult(details.formatted, details);
+		},
+		renderCall(args, theme) {
+			return renderCallText("chrome_search", truncateInline(args.query ?? "", 80), theme);
+		},
+		renderResult(result, _options, theme) {
+			const details = result.details;
+			return renderResultText(`${details?.results?.length ?? 0} result(s) via ${details?.engine ?? "search"}`, theme);
 		},
 	});
 }
