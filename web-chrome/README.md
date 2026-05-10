@@ -240,7 +240,7 @@ Headless is the default. Use one of:
 
 ### Search with Google and DuckDuckGo
 
-Use `chrome_search` for efficient web search. It navigates Chrome to lightweight search-result pages, extracts organic result titles/URLs/snippets, and detects bot challenges:
+Use `chrome_search` for efficient web search. The extension prompt tells Pi to use this as the default whenever the user asks to search the web, look something up online, find current information, or research a topic. It navigates Chrome to lightweight search-result pages, extracts organic result titles/URLs/snippets, and detects bot challenges:
 
 ```json
 { "query": "pi coding agent github", "engine": "auto", "limit": 10 }
