@@ -1,0 +1,49 @@
+{
+  "name": "pi-web-chrome",
+  "version": "0.1.0",
+  "description": "Pi extension that launches or connects to Chrome via the Chrome DevTools Protocol",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "chrome",
+    "cdp",
+    "browser-automation"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "files": [
+    "src",
+    "README.md",
+    "SECURITY.md",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "smoke": "node --import tsx -e \"import ext from './src/index.ts'; const tools=[]; const commands=[]; const pi={registerTool:t=>tools.push(t.name),registerCommand:n=>commands.push(n),on(){},registerFlag(){},getFlag(){return undefined}}; ext(pi); const expectedTools=['chrome_status','chrome_launch','chrome_connect','chrome_close','chrome_tabs','chrome_navigate','chrome_wait_for','chrome_snapshot','chrome_click','chrome_type','chrome_press_key','chrome_scroll','chrome_screenshot','chrome_console','chrome_network','chrome_evaluate']; const expectedCommands=['chrome']; for (const name of expectedTools) if (!tools.includes(name)) throw new Error('Missing tool '+name); for (const name of expectedCommands) if (!commands.includes(name)) throw new Error('Missing command '+name); for (const name of commands) if (name.startsWith('chrome-')) throw new Error('Unexpected legacy command '+name); console.log({tools,commands});\""
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.13",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.0"
+  }
+}
